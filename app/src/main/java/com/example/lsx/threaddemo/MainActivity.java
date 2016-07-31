@@ -5,15 +5,19 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private ImageView mImageView;
     private Button mLoadImageButton;
     private Button mToastButton;
+    private ProgressBar mProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
         mImageView = (ImageView) findViewById(R.id.activity_main_image_view);
         mLoadImageButton = (Button) findViewById(R.id.activity_main_load_image_button);
         mToastButton = (Button) findViewById(R.id.activity_main_toast_button);
+        mProgressBar = (ProgressBar) findViewById(R.id.activity_main_progress_bar);
 
         mToastButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 //方式一
                 // loadImage();
                 //方式二
+
                 new LoadImageTask().execute();
             }
         });
@@ -65,14 +71,26 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }*/
     //使用AsyncTask类的方法实现子线程切换到主线程
-    class LoadImageTask extends AsyncTask<Void,Void,Bitmap>{
+    class LoadImageTask extends AsyncTask<Void,Integer,Bitmap>{
+        @Override
+        protected void onPreExecute() {
+            mImageView.setImageBitmap(null);
+            mProgressBar.setProgress(0);
+            mProgressBar.setVisibility(View.VISIBLE);
+        }
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            //在子线程执行
+            Log.d(TAG, "doInBackground: "+Thread.currentThread().getName());
+            for (int i = 1; i < 11; i++) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Log.d(TAG, "进度: "+i);
+                publishProgress(i * 10);
             }
             Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
             return bitmap;
@@ -80,7 +98,15 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
+            mProgressBar.setVisibility(View.INVISIBLE);
             mImageView.setImageBitmap(bitmap);
+            //在主线程执行
+            Log.d(TAG, "onPostExecute: "+Thread.currentThread().getName());
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            mProgressBar.setProgress(values[0]);
         }
     }
 }
