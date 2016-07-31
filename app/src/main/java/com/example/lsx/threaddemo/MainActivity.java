@@ -37,12 +37,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadImage() {
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        mImageView.setImageBitmap(bitmap);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //将ic_launcher转换为Bitmap类型
+                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                mImageView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mImageView.setImageBitmap(bitmap);
+                    }
+                });
+
+            }
+        }).start();
     }
 }
